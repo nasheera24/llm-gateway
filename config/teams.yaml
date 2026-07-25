@@ -1,0 +1,28 @@
+teams:
+  team_alpha:
+    name: "Alpha Engineering Team"
+    api_key: "sk-team-alpha-key-123"
+    plan: "enterprise"
+    allowed_models:
+      - "gpt-4o"
+      - "gpt-4o-mini"
+      - "claude-3-5-sonnet-20240620"
+      - "ollama/llama3.1"
+    rate_limit_rpm: 60
+    monthly_budget_usd: 500.00
+    enrichment:
+      default_system_prompt: "You are an enterprise AI assistant for Alpha Team. Provide precise, technical answers."
+      compliance_disclaimer: "\n\n[NOTICE: Output generated via Alpha Team Gateway. Confidential.]"
+
+  team_beta:
+    name: "Beta Support Team"
+    api_key: "sk-team-beta-key-456"
+    plan: "basic"
+    allowed_models:
+      - "gpt-4o-mini"
+      - "ollama/llama3.1"
+    rate_limit_rpm: 20
+    monthly_budget_usd: 50.00
+    enrichment:
+      default_system_prompt: "You are a polite customer support agent. Be helpful and empathetic."
+      compliance_disclaimer: "\n\n[NOTICE: Customer support response. Do not share personal customer PII.]"
