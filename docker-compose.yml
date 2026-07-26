@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  llm-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - MOCK_PROVIDER_URL=http://mock-providers:9090
+    depends_on:
+      - redis
+      - mock-providers
+
+  mock-providers:
+    build:
+      context: .
+      dockerfile: Dockerfile.mock
+    ports:
+      - "9090:9090"
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9091:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+    depends_on:
+      - prometheus

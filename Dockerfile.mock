@@ -1,0 +1,12 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir fastapi uvicorn httpx
+
+COPY mock_provider_server.py .
+
+EXPOSE 9090
+
+CMD ["python", "mock_provider_server.py"]
