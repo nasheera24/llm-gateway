@@ -1,0 +1,26 @@
+{
+  "title": "LLM Gateway - Performance Dashboard",
+  "tags": ["llm-gateway", "performance"],
+  "timezone": "browser",
+  "panels": [
+    {
+      "id": 1,
+      "title": "Latency Percentiles (P50, P95, P99) by Provider",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.99, sum(rate(llm_gateway_latency_seconds_bucket[5m])) by (le, provider))",
+          "legendFormat": "P99 {{provider}}"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(llm_gateway_latency_seconds_bucket[5m])) by (le, provider))",
+          "legendFormat": "P95 {{provider}}"
+        },
+        {
+          "expr": "histogram_quantile(0.50, sum(rate(llm_gateway_latency_seconds_bucket[5m])) by (le, provider))",
+          "legendFormat": "P50 {{provider}}"
+        }
+      ]
+    }
+  ]
+}

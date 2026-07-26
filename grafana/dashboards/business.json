@@ -1,0 +1,29 @@
+{
+  "title": "LLM Gateway - Business Dashboard",
+  "tags": ["llm-gateway", "business"],
+  "timezone": "browser",
+  "panels": [
+    {
+      "id": 1,
+      "title": "Per-Team Cumulative Spend (USD)",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "sum(llm_gateway_cost_usd_total) by (team_id)",
+          "legendFormat": "Team {{team_id}}"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Token Throughput (Tokens/sec)",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "sum(rate(llm_gateway_tokens_total[1m])) by (token_type, team_id)",
+          "legendFormat": "{{token_type}} tokens - {{team_id}}"
+        }
+      ]
+    }
+  ]
+}

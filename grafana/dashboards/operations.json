@@ -1,0 +1,40 @@
+{
+  "title": "LLM Gateway - Operations Dashboard",
+  "tags": ["llm-gateway", "operations"],
+  "timezone": "browser",
+  "panels": [
+    {
+      "id": 1,
+      "title": "Requests per Second by Provider & Model",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "sum(rate(llm_gateway_requests_total[1m])) by (provider, model)",
+          "legendFormat": "{{provider}} - {{model}}"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Circuit Breaker State (0=CLOSED, 1=HALF_OPEN, 2=OPEN)",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "llm_gateway_circuit_breaker_state",
+          "legendFormat": "{{model}}"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Fallback Trigger Rate",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "sum(rate(llm_gateway_fallback_triggers_total[5m])) by (requested_model, final_model)",
+          "legendFormat": "Fallback {{requested_model}} -> {{final_model}}"
+        }
+      ]
+    }
+  ]
+}
