@@ -10,9 +10,9 @@ A **high-performance, distributed LLM API Gateway** designed for enterprise AI p
 
 ---
 
-## ⚡ Executive System Metrics
+## ⚡ System Performance Metrics
 
-| Metric | Measured Value | SLA Target |
+| Metric | Measured Value | Target SLA |
 | :--- | :--- | :--- |
 | **Gateway Throughput** | **3,120.94 Requests/sec** | > 1,000 RPS |
 | **Gateway P50 Overhead** | **0.20 ms** | < 10.0 ms |
@@ -23,7 +23,7 @@ A **high-performance, distributed LLM API Gateway** designed for enterprise AI p
 
 ---
 
-## 🏗️ Core Architecture & Distributed Components
+## 🏗️ Architecture & Component Overview
 
 ```
                         Incoming Client Request
@@ -71,14 +71,14 @@ A **high-performance, distributed LLM API Gateway** designed for enterprise AI p
 
 ---
 
-## 🚀 Key Engineering Features
+## 🚀 Key Features
 
 ### 1. Unified Provider Adapter Layer
-* Normalizes incoming requests and outgoing responses across **OpenAI, Anthropic Claude, and Ollama Llama 3.1** into the industry-standard OpenAI JSON format.
+* Normalizes incoming requests and outgoing responses across **OpenAI, Anthropic Claude, and Ollama Llama 3.1** into standard OpenAI JSON format.
 * Transparent real-time **SSE (Server-Sent Events) streaming passthrough**.
 
 ### 2. Atomic Distributed Token-Bucket Rate Limiter (`app/services/rate_limiter.py`)
-* Implements the **Token Bucket algorithm using an atomic Redis Lua Script** to prevent race conditions across multi-node deployments.
+* Implements the **Token Bucket algorithm using atomic Redis Lua Scripts** to prevent race conditions across multi-node deployments.
 * Supports **Priority Capacity Reservation (`X-Priority: high | batch`)**: High-priority real-time UI requests receive 100% bucket access, whereas batch processing jobs are throttled when team capacity drops below threshold.
 
 ### 3. Model Pricing Engine & Budget Enforcement (`app/services/budget_service.py`)
@@ -96,16 +96,16 @@ A **high-performance, distributed LLM API Gateway** designed for enterprise AI p
 
 ---
 
-## 🛠️ Quick Start & Demo Setup
+## 🛠️ Getting Started & Deployment
 
-### 1. One-Command Setup & Benchmark Execution
+### 1. Local Quick Start & Benchmark Execution
 ```bash
 git clone https://github.com/nasheera24/llm-gateway.git
 cd llm-gateway
 ./scripts/setup_demo.sh
 ```
 
-### 2. Launch Full Docker Compose Stack
+### 2. Launch Containerized Stack (Docker Compose)
 ```bash
 docker-compose up -d
 ```
@@ -113,17 +113,3 @@ docker-compose up -d
 * **Prometheus Metrics:** `http://localhost:8080/metrics`
 * **Grafana Dashboards:** `http://localhost:3000` (User: `admin` / Password: `admin`)
 * **Prometheus Server:** `http://localhost:9091`
-
----
-
-## 📹 Demo Video Script Guide
-
-For recording your demonstration video:
-
-| Time | Topic | What to Show & Say |
-| :--- | :--- | :--- |
-| **0:00 - 0:45** | **Architecture Overview** | Show the architecture diagram above. Explain multi-provider normalization and system SLAs. |
-| **0:45 - 1:30** | **Unified API & Real-time SSE Streaming** | Send a streaming request via `curl` to `/v1/chat/completions`. Show real-time SSE token delivery. |
-| **1:30 - 2:15** | **Atomic Rate Limiting & Budget Caps** | Run 30 concurrent requests using team `sk-team-beta-key-456`. Show 20 succeed and 10 get rejected with `429 Too Many Requests` and `Retry-After: 3s`. |
-| **2:15 - 3:15** | **Simulated Outage & Automatic Failover** | Trip OpenAI circuit breaker to `OPEN`. Send a request to `gpt-4o`. Show gateway seamlessly failover to `claude-3-5-sonnet-20240620` with zero client errors. |
-| **3:15 - 4:00** | **Grafana Metrics & Slack Alerts** | Open Grafana at `http://localhost:3000`. Show live RPS, latency P99, and Slack alert notifications. |
