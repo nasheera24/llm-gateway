@@ -1,0 +1,20 @@
+tiers:
+  tier_1_high:
+    primary: "gpt-4o"
+    fallback_chain:
+      - "gpt-4o"
+      - "claude-3-5-sonnet-20240620"
+      - "ollama/llama3.1"
+
+  tier_2_mid:
+    primary: "gpt-4o-mini"
+    fallback_chain:
+      - "gpt-4o-mini"
+      - "ollama/llama3.1"
+
+# Model to tier mapping
+model_tiers:
+  gpt-4o: "tier_1_high"
+  claude-3-5-sonnet-20240620: "tier_1_high"
+  gpt-4o-mini: "tier_2_mid"
+  ollama/llama3.1: "tier_2_mid"

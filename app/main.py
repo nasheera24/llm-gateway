@@ -1,4 +1,5 @@
 import time
+import asyncio
 from typing import Optional
 from fastapi import FastAPI, Depends, Header, HTTPException, Response, status
 from fastapi.responses import StreamingResponse
@@ -9,13 +10,14 @@ from app.services.auth import security, authenticate_and_authorize
 from app.services.enrichment import enrichment_service
 from app.services.rate_limiter import rate_limiter
 from app.services.budget_service import budget_service
+from app.services.resilience import resilience_engine, health_monitor
 from app.providers.factory import provider_factory
 from app.routes import admin
 
 app = FastAPI(
-    title="Enterprise LLM Gateway - Phase 2",
-    description="Unified Gateway with Token-Bucket Rate Limiting, Budget Caps & Admin API",
-    version="2.0.0"
+    title="Enterprise LLM Gateway - Phase 3",
+    description="Unified Gateway with Retries, Circuit Breakers, Automatic Fallback & Health Monitoring",
+    version="3.0.0"
 )
 
 # Mount Admin API Router
@@ -23,7 +25,7 @@ app.include_router(admin.router)
 
 @app.get("/health")
 async def health_check():
-    return {"status": "healthy", "service": "llm-gateway", "phase": 2}
+    return {"status": "healthy", "service": "llm-gateway", "phase": 3}
 
 @app.post("/v1/chat/completions")
 async def chat_completions(
@@ -69,41 +71,49 @@ async def chat_completions(
             }
         )
 
-
     # 4. Enrich Request (System Prompts, Disclaimers)
     enriched_request = enrichment_service.enrich_request(request, team_config=team)
 
-    # 5. Route to Provider Adapter
-    provider = provider_factory.get_provider(request.model)
-
-    # 6. Streaming Passthrough
+    # 5. Streaming Passthrough (Direct provider execution)
     if enriched_request.stream:
+        provider = provider_factory.get_provider(request.model)
         return StreamingResponse(
             provider.stream_generate(enriched_request),
             media_type="text/event-stream"
         )
 
-    # 7. Non-Streaming Response
-    res: ChatCompletionResponse = await provider.generate(enriched_request)
+    # 6. Non-Streaming Response via Resilience Pipeline (Retries, Circuit Breaker, Fallbacks)
+    try:
+        res, final_model, exec_logs = await resilience_engine.execute_with_resilience(
+            request=enriched_request,
+            max_retries_per_model=2
+        )
+    except Exception as e:
+        latency_ms = round((time.time() - start_time) * 1000, 2)
+        health_monitor.update_status(request.model, "DOWN", latency_ms, is_error=True)
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Resilience layer exhausted: {str(e)}"
+        )
 
-    # 8. Enrich output content with compliance disclaimer
+    # 7. Enrich output content with compliance disclaimer
     if res.choices:
         original_content = res.choices[0].message.content
         res.choices[0].message.content = enrichment_service.enrich_response_text(
             original_content, team_config=team
         )
 
-    # 9. Compute & Record Cost
+    # 8. Compute & Record Cost
     prompt_tokens = res.usage.prompt_tokens
     completion_tokens = res.usage.completion_tokens
-    req_cost = budget_service.calculate_request_cost(request.model, prompt_tokens, completion_tokens)
+    req_cost = budget_service.calculate_request_cost(final_model, prompt_tokens, completion_tokens)
     new_total_spend = budget_service.record_spend(team_id, req_cost)
 
-    # Re-evaluate warning flag after recording new spend
-    _, _, updated_spend_percent, updated_warning_flag = budget_service.check_budget_status(team_id, monthly_budget)
+    # 9. Update Health Status & Metrics
+    latency_ms = round((time.time() - start_time) * 1000, 2)
+    health_monitor.update_status(final_model, "HEALTHY", latency_ms, is_error=False)
 
     # 10. Inject Gateway Metadata & Headers
-    latency_ms = round((time.time() - start_time) * 1000, 2)
     response.headers["X-RateLimit-Limit"] = str(limit_rpm)
     response.headers["X-RateLimit-Remaining"] = str(remaining_tokens)
 
@@ -111,13 +121,16 @@ async def chat_completions(
         "team_id": team_id,
         "team_name": team["name"],
         "plan": team["plan"],
-        "provider_served": provider.__class__.__name__,
+        "requested_model": request.model,
+        "final_model_served": final_model,
+        "fallback_triggered": bool(final_model != request.model),
         "priority_level": x_priority,
         "request_cost_usd": req_cost,
         "total_monthly_spend_usd": new_total_spend,
-        "spend_percent": updated_spend_percent,
-        "budget_warning_80_percent": updated_warning_flag,
-        "latency_ms": latency_ms
+        "spend_percent": spend_percent,
+        "budget_warning_80_percent": warning_flag,
+        "latency_ms": latency_ms,
+        "resilience_logs": exec_logs
     }
 
     return res

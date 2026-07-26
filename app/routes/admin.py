@@ -4,6 +4,8 @@ from fastapi import APIRouter, HTTPException, Header, status
 from app.config import config
 from app.services.budget_service import budget_service
 from app.services.audit_service import audit_service
+from app.services.circuit_breaker import circuit_breaker
+from app.services.resilience import health_monitor
 
 router = APIRouter(prefix="/v1/admin", tags=["Admin API"])
 
@@ -95,3 +97,11 @@ async def get_spending_dashboard():
 @router.get("/audit-logs")
 async def get_audit_logs(team_id: Optional[str] = None):
     return {"audit_logs": audit_service.get_audit_logs(team_id)}
+
+@router.get("/health")
+async def get_provider_health():
+    return {"provider_health": health_monitor.get_health_report()}
+
+@router.get("/circuit-breakers")
+async def get_circuit_breakers():
+    return circuit_breaker.get_status()
