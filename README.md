@@ -116,24 +116,14 @@ docker-compose up -d
 
 ---
 
-## 📹 4-Minute Demo Video Script Guide
+## 📹 Demo Video Script Guide
 
-For recording your demo video (e.g. via Loom or QuickTime):
+For recording your demonstration video:
 
 | Time | Topic | What to Show & Say |
 | :--- | :--- | :--- |
-| **0:00 - 0:45** | **Architecture Overview** | Show the architecture diagram above. *"I built an enterprise LLM API gateway handling over 3,100 requests per second with less than 1ms P99 overhead."* |
+| **0:00 - 0:45** | **Architecture Overview** | Show the architecture diagram above. Explain multi-provider normalization and system SLAs. |
 | **0:45 - 1:30** | **Unified API & Real-time SSE Streaming** | Send a streaming request via `curl` to `/v1/chat/completions`. Show real-time SSE token delivery. |
 | **1:30 - 2:15** | **Atomic Rate Limiting & Budget Caps** | Run 30 concurrent requests using team `sk-team-beta-key-456`. Show 20 succeed and 10 get rejected with `429 Too Many Requests` and `Retry-After: 3s`. |
 | **2:15 - 3:15** | **Simulated Outage & Automatic Failover** | Trip OpenAI circuit breaker to `OPEN`. Send a request to `gpt-4o`. Show gateway seamlessly failover to `claude-3-5-sonnet-20240620` with zero client errors. |
 | **3:15 - 4:00** | **Grafana Metrics & Slack Alerts** | Open Grafana at `http://localhost:3000`. Show live RPS, latency P99, and Slack alert notifications. |
-
----
-
-## 📄 Resume Portfolio Framing (MAANG / FAANG)
-
-> **Architected & Built an Enterprise Multi-Provider LLM API Gateway (Python, FastAPI, Redis, OpenTelemetry, Prometheus, Docker)**
-> * Designed a high-throughput unified gateway normalizing OpenAI, Anthropic, and Ollama APIs, achieving **3,120+ RPS with <0.97ms P99 overhead latency**.
-> * Implemented atomic distributed rate limiting and priority capacity reservation using **Redis Lua scripts**, eliminating race conditions under high concurrency.
-> * Engineered an automatic resilience layer with **3-state circuit breakers**, exponential backoff retries, and tier-based failover chains (GPT-4o ➔ Claude Sonnet ➔ Llama 3), ensuring **zero-downtime during primary provider outages**.
-> * Instrumented distributed tracing spans with **OpenTelemetry** and exported **Prometheus metrics** to pre-configured **Grafana dashboards** and automated **Slack alerting pipelines**.
