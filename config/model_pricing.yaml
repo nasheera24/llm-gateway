@@ -1,0 +1,16 @@
+models:
+  gpt-4o:
+    input_price_per_1k: 0.0025
+    output_price_per_1k: 0.0100
+
+  gpt-4o-mini:
+    input_price_per_1k: 0.00015
+    output_price_per_1k: 0.00060
+
+  claude-3-5-sonnet-20240620:
+    input_price_per_1k: 0.0030
+    output_price_per_1k: 0.0150
+
+  ollama/llama3.1:
+    input_price_per_1k: 0.0000
+    output_price_per_1k: 0.0000
